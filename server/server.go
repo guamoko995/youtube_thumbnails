@@ -1,0 +1,68 @@
+package main
+
+import (
+	"bufio"
+	"context"
+	"flag"
+	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"strings"
+	"sync"
+
+	"google.golang.org/grpc"
+
+	pb "youtube_thumbnail/thumbnail"
+)
+
+var (
+	serverAddr = flag.String("addr", "localhost:50051", "The server address in the format of host:port")
+	port       = flag.Int("port", 50051, "The server port")
+)
+
+type thumbnailServer struct {
+	pb.UnimplementedThumbailServer
+	//savedUrl []*pb.Url // read-only after initialized
+
+	mu sync.Mutex // protects routeNotes
+	//Cache map[string][]*pb.Url
+}
+
+// GetFeature returns the feature at the given point.
+func (s *thumbnailServer) GetThumbnail(ctx context.Context, url *pb.Url) (*pb.Img, error) {
+
+	fname := strings.Replace(url.Val, "https://youtu.be/", "", 1)
+	imgUrl := "https://img.youtube.com/vi/" + fname + "/hqdefault.jpg"
+	//fname += ".jpg"
+
+	resp, err := http.Get(imgUrl)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	out := ""
+	scanner := bufio.NewScanner(resp.Body)
+	for scanner.Scan() {
+		out += fmt.Sprintln(scanner.Text())
+	}
+	return &pb.Img{Val: []byte(out)}, nil
+}
+
+func newServer() *thumbnailServer {
+	s := &thumbnailServer{} //Cache: make(map[string][]*pb.Msg)}
+	return s
+}
+
+func main() {
+	flag.Parse()
+	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	var opts []grpc.ServerOption
+	grpcServer := grpc.NewServer(opts...)
+	pb.RegisterThumbailServer(grpcServer, newServer())
+	grpcServer.Serve(lis)
+}

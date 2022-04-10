@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option go_package = "youtube_thumbnail/thumbnail";
+
+package thumbnail;
+
+service Thumbail {
+  rpc GetThumbnail(Url) returns (Img) {} 
+}
+
+message Url {
+  string val = 1;
+}
+
+message Img {
+  bytes val = 1;
+}
