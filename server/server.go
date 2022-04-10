@@ -42,10 +42,10 @@ func (s *thumbnailServer) GetThumbnail(ctx context.Context, url *pb.Url) (*pb.Im
 	}
 	defer resp.Body.Close()
 
-	out := ""
+	out := make([]byte, 0)
 	scanner := bufio.NewScanner(resp.Body)
 	for scanner.Scan() {
-		out += fmt.Sprintln(scanner.Text())
+		out = append(out, scanner.Bytes()...)
 	}
 	return &pb.Img{Val: []byte(out)}, nil
 }
