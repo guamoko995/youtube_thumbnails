@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"sync"
 
 	_ "modernc.org/sqlite"
@@ -127,5 +128,6 @@ func (db *DB) Get(urlVideo string) ([]byte, error) {
 		}
 		return img, tx.Commit()
 	}
-	return nil, tx.Commit()
+	tx.Commit()
+	return nil, fmt.Errorf("Key not found")
 }

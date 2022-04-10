@@ -19,7 +19,7 @@ import (
 var (
 	serverAddr = flag.String("addr", "localhost:50051", "The server address in the format of host:port")
 	port       = flag.Int("port", 50051, "The server port")
-	database   = flag.String("database", "thumbnails.sql", "The file of database SQLite")
+	database   = flag.String("database", "", "The file of database SQLite")
 )
 
 // gRPC прокси-сервис для загрузки thumbnail’ов
@@ -46,7 +46,7 @@ func (s *thumbnailServer) GetThumbnail(ctx context.Context, url *proto.Url) (*pr
 	}
 
 	// Кэширует полученный thumbnail
-	fmt.Println(s.Cache.Add(url.Val, img))
+	s.Cache.Add(url.Val, img)
 
 	return &proto.Img{Val: img}, nil
 }
