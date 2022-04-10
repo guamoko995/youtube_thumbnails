@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bufio"
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	"sync"
 
 	"google.golang.org/grpc"
 
@@ -23,20 +22,12 @@ var (
 
 type thumbnailServer struct {
 	pb.UnimplementedThumbailServer
-	//savedUrl []*pb.Url // read-only after initialized
-
-	mu sync.Mutex // protects routeNotes
-	//Cache map[string][]*pb.Url
+	//Cache map[string]byte
 }
 
 // GetFeature returns the feature at the given point.
 func (s *thumbnailServer) GetThumbnail(ctx context.Context, url *pb.Url) (*pb.Img, error) {
 	imgUrl := strings.Replace(url.Val, "youtu.be", "img.youtube.com/vi", 1) + "/hqdefault.jpg"
-
-	// https://img.youtube.com/vi/z-mHhobE0Pw/hqdefault.jpg
-
-	fmt.Println(imgUrl)
-	//fname += ".jpg"
 
 	resp, err := http.Get(imgUrl)
 	if err != nil {
@@ -44,12 +35,11 @@ func (s *thumbnailServer) GetThumbnail(ctx context.Context, url *pb.Url) (*pb.Im
 	}
 	defer resp.Body.Close()
 
-	out := make([]byte, 0)
-	scanner := bufio.NewScanner(resp.Body)
-	for scanner.Scan() {
-		out = append(out, []byte(scanner.Text())...)
-	}
-	return &pb.Img{Val: []byte(out)}, nil
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+
+	return &pb.Img{Val: buf.Bytes()}, nil
+
 }
 
 func newServer() *thumbnailServer {
