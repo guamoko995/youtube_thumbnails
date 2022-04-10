@@ -22,15 +22,22 @@ var (
 	serverAddr = flag.String("addr", "localhost:50051", "The server address in the format of host:port")
 )
 
+// GetThumbnail получает thumbnail видеоролика Youtube по url видеоролика
+// с помощью gRPC
 func GetThumbnail(client pb.ThumbailClient, url string, path string, fname string) {
+	// Установка соединения с ожиданием ответа 10 секунд
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+
+	// Получение thumbnail'а по gRPC
 	img, err := client.GetThumbnail(ctx, &pb.Url{Val: url})
 	if err != nil {
-		log.Fatalf("%v.GetThumbnail(_) = _, %v: ", client, err)
+		log.Fatalf("%v.GetThumbnail: %v", client, err)
 	}
+
+	// Сохранение thumbnail'а в файл
 	if err := ioutil.WriteFile(path+"\\"+fname, img.Val, 0644); err != nil {
-		log.Fatalln("Failed to write file:", err)
+		log.Fatalf("Failed to write file: %v", err)
 	}
 }
 
@@ -45,13 +52,13 @@ func main() {
 	defer conn.Close()
 	client := pb.NewThumbailClient(conn)
 
-	// Получение основных параметров (ссылок на видео youtube)
-
+	// Получение утилитой основных параметров (ссылок на видео youtube)
 	urls := make([]string, 0)
 	for _, arg := range flag.Args() {
 		urls = append(urls, arg)
 	}
 
+	// Проверка была-ли указана хоть одна ссылка
 	if len(urls) == 0 {
 		log.Fatalln("Not set url(s)")
 	}
@@ -64,10 +71,9 @@ func main() {
 
 	// Скачивание thumbnail'ов
 	if *async {
-		//асинхронное скачивание
 		var wg sync.WaitGroup
 
-		// функция асинхронного вызов GetThumbnail с контролем ожидания
+		// функция асинхронного вызова GetThumbnail с контролем ожидания завершения
 		assignGetThumbnail := func(url, out, fname string) {
 			wg.Add(1)
 			go func() {
@@ -75,14 +81,20 @@ func main() {
 				GetThumbnail(client, url, out, fname)
 			}()
 		}
+
+		// Асинхронное скачивание
 		for _, url := range urls {
+			// В качестве имени файла изображения используется
+			// уникальная часть url видеоролика
 			fname := strings.Replace(url, "https://youtu.be/", "", 1) + ".jpg"
 			assignGetThumbnail(url, *out, fname)
 		}
 		wg.Wait()
 	} else {
-		//последовательное скачивание
+		//Последовательное скачивание
 		for _, url := range urls {
+			// В качестве имени файла изображения используется
+			// уникальная часть url видеоролика
 			fname := strings.Replace(url, "https://youtu.be/", "", 1) + ".jpg"
 			GetThumbnail(client, url, *out, fname)
 		}

@@ -4,7 +4,9 @@ option go_package = "youtube_thumbnail/thumbnail";
 
 package thumbnail;
 
+// Thumbail - интерфейс экспортируемого сервиса 
 service Thumbail {
+  // Реализация единственной RPC сервиса - получения thumbnail’а по url видеоролика Yuotube.
   rpc GetThumbnail(Url) returns (Img) {} 
 }
 
@@ -13,5 +15,6 @@ message Url {
 }
 
 message Img {
+  // Изображение представляется массивом байтов
   bytes val = 1;
 }
