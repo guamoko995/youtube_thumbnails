@@ -83,7 +83,7 @@ func main() {
 	} else {
 		//последовательное скачивание
 		for _, url := range urls {
-			fname := strings.Replace(url, "https://youtu.be/", "", 1)
+			fname := strings.Replace(url, "https://youtu.be/", "", 1) + ".jpg"
 			GetThumbnail(client, url, *out, fname)
 		}
 	}

@@ -31,9 +31,11 @@ type thumbnailServer struct {
 
 // GetFeature returns the feature at the given point.
 func (s *thumbnailServer) GetThumbnail(ctx context.Context, url *pb.Url) (*pb.Img, error) {
+	imgUrl := strings.Replace(url.Val, "youtu.be", "img.youtube.com/vi", 1) + "/hqdefault.jpg"
 
-	fname := strings.Replace(url.Val, "https://youtu.be/", "", 1)
-	imgUrl := "https://img.youtube.com/vi/" + fname + "/hqdefault.jpg"
+	// https://img.youtube.com/vi/z-mHhobE0Pw/hqdefault.jpg
+
+	fmt.Println(imgUrl)
 	//fname += ".jpg"
 
 	resp, err := http.Get(imgUrl)
@@ -45,7 +47,7 @@ func (s *thumbnailServer) GetThumbnail(ctx context.Context, url *pb.Url) (*pb.Im
 	out := make([]byte, 0)
 	scanner := bufio.NewScanner(resp.Body)
 	for scanner.Scan() {
-		out = append(out, scanner.Bytes()...)
+		out = append(out, []byte(scanner.Text())...)
 	}
 	return &pb.Img{Val: []byte(out)}, nil
 }
