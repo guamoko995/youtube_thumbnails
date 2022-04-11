@@ -36,11 +36,14 @@
 --serverAddr    - Адрес сервера для получения RPC "GetThumbnail" в формате 
                   host:port. Значение по умолчанию: localhost:50051
 
+Пример запуска в командной строке Windows:
+>client --async --out=C:\Users\%USERNAME%\Downloads https://youtu.be/CWcj99dc650 https://youtu.be/_bL0s9JRVRk https://youtu.be/duy7bSyPLhs           
+
 
 # Интерфейс взаимодействия 
 Интерфейс взаимодействия клиента и сервера описан в файле thumbnail/thumbnail.proto. Код интерфейсов  gRPC "сервера" и "заглушки/клиента" сгенерированы protoc-3.20.0
 
 # Автор
 
-Никита шеремета
+Никита Шеремета
 guamoko95@gmail.com
